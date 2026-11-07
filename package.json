@@ -1,0 +1,26 @@
+{
+  "name": "beyond-the-walls",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint .",
+    "prepare:hero": "node scripts/prepare-hero.mjs"
+  },
+  "dependencies": {
+    "next": "^16.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "gsap": "^3.13.0",
+    "@gsap/react": "^2.1.2"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.0",
+    "ffmpeg-static": "^5.2.0"
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "eren": {
+    "width": 1013,
+    "height": 1177,
+    "crop": 0.7
+  },
+  "mikasa": {
+    "width": 1104,
+    "height": 920,
+    "crop": 0.72
+  },
+  "armin": {
+    "width": 1155,
+    "height": 813,
+    "crop": 0.65
+  },
+  "levi": {
+    "width": 1103,
+    "height": 1168,
+    "crop": 0.8
+  },
+  "hange": {
+    "width": 1169,
+    "height": 1147,
+    "crop": 0.65
+  },
+  "erwin": {
+    "width": 1200,
+    "height": 895,
+    "crop": 0.65
+  },
+  "jean": {
+    "width": 1200,
+    "height": 1028,
+    "crop": 0.65
+  },
+  "connie": {
+    "width": 1200,
+    "height": 913,
+    "crop": 0.7
+  },
+  "sasha": {
+    "width": 1200,
+    "height": 1148,
+    "crop": 0.65
+  },
+  "historia": {
+    "width": 1088,
+    "height": 1061,
+    "crop": 0.6
+  },
+  "ymir": {
+    "width": 1147,
+    "height": 831,
+    "crop": 0.65
+  },
+  "reiner": {
+    "width": 1200,
+    "height": 1027,
+    "crop": 0.65
+  },
+  "bertholdt": {
+    "width": 1200,
+    "height": 1037,
+    "crop": 0.58
+  },
+  "annie": {
+    "width": 1200,
+    "height": 1123,
+    "crop": 0.65
+  },
+  "hannes": {
+    "width": 493,
+    "height": 1200,
+    "crop": 0.55
+  },
+  "pixis": {
+    "width": 527,
+    "height": 1200,
+    "crop": 0.55
+  },
+  "marco": {
+    "width": 574,
+    "height": 1200,
+    "crop": 0.65
+  },
+  "petra": {
+    "width": 530,
+    "height": 1200,
+    "crop": 0.65
+  },
+  "zeke": {
+    "width": 396,
+    "height": 1353,
+    "crop": 0.47
+  },
+  "pieck": {
+    "width": 444,
+    "height": 1319,
+    "crop": 0.47
+  },
+  "falco": {
+    "width": 367,
+    "height": 1190,
+    "crop": 0.47
+  },
+  "gabi": {
+    "width": 391,
+    "height": 1292,
+    "crop": 0.47
+  },
+  "floch": {
+    "width": 330,
+    "height": 1012,
+    "crop": 0.52
+  }
+}
