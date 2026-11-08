@@ -23,7 +23,7 @@ export function TitanGallery() {
       </button>
     </div>}
     <div className="titan-atlas-field">{figures.map(item => <button key={item.id} className={`titan-figure ${item.wide ? "titan-figure-wide" : ""}`} style={{ "--figure-height": `${item.displayHeight}px` }} onClick={() => setSelected(item)} aria-label={`Explore ${titanDisplayTitle(item)}, ${item.sizeLabel}`} aria-haspopup="dialog">
-      <span className="titan-figure-art"><Image src={item.image} alt={titanDisplayTitle(item)} width={1400} height={1100} sizes="(max-width: 600px) 48vw, (max-width: 1000px) 32vw, 25vw"/></span>
+      <span className="titan-figure-art"><Image src={item.image} alt={titanDisplayTitle(item)} width={1400} height={1100} loading="eager" sizes="(max-width: 600px) 48vw, (max-width: 1000px) 32vw, 25vw"/></span>
       <span className="titan-figure-caption"><strong>{titanDisplayTitle(item)}</strong><span>{item.type}</span><small>{item.sizeLabel}</small></span>
     </button>)}</div>
     {!matches.length && <p className="titan-no-results">No Titans match this search. Try a Titan name or form.</p>}

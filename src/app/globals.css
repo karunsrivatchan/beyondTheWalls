@@ -53,13 +53,13 @@ select option { background: #191b16; color: var(--bone); }
 .hero-status { position: absolute; bottom: 98px; left: clamp(24px, 4vw, 72px); font-size: 11px; color: #e7ceae; max-width: 85%; }
 .hero-loading .hero-video { opacity: .7; }
 .hero-error .hero-video { visibility: hidden; }
-.hero-preloader {
-  position: absolute;
-  z-index: 4;
+.page-preloader {
+  position: fixed;
+  z-index: 100;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 100px 24px 48px;
+  padding: 24px;
   background: radial-gradient(ellipse at center, #25201a, #10110f 68%);
   text-align: center;
   pointer-events: none;
@@ -67,20 +67,24 @@ select option { background: #191b16; color: var(--bone); }
   visibility: hidden;
   transition: opacity .4s ease, visibility .4s;
 }
-.hero-loading .hero-preloader { opacity: 1; visibility: visible; }
-.hero-preloader-mark { color: #d97666; font-family: Georgia, serif; font-size: 15px; letter-spacing: .35em; }
-.hero-preloader-title { margin-block: 12px; font-size: clamp(38px, 8vw, 108px); line-height: .95; }
-.hero-preloader .eyebrow { color: #c8bdab; }
-.hero-preloader-rule { width: 112px; height: 2px; margin: 32px auto 12px; background: #ffffff26; overflow: hidden; }
-.hero-preloader-rule span { display: block; width: 50%; height: 100%; background: var(--red); }
-.hero-loading .hero-preloader-rule span { animation: hero-loading-sweep 1.15s ease-in-out infinite alternate; }
-.hero-preloader-caption { color: var(--muted); font-size: 12px; }
-@keyframes hero-loading-sweep { from { transform: translateX(0); } to { transform: translateX(100%); } }
+.page-preloader.is-loading { opacity: 1; visibility: visible; pointer-events: auto; }
+html:has(.page-preloader.is-loading) { overflow: hidden; }
+.page-preloader-mark { color: #d97666; font-family: Georgia, serif; font-size: 15px; letter-spacing: .35em; }
+.page-preloader-title { margin-block: 12px; font-size: clamp(38px, 8vw, 108px); line-height: .95; }
+.page-preloader .eyebrow { color: #c8bdab; }
+.page-preloader-rule { width: 112px; height: 2px; margin: 32px auto 12px; background: #ffffff26; overflow: hidden; }
+.page-preloader-rule span { display: block; width: 50%; height: 100%; background: var(--red); }
+.page-preloader.is-loading .page-preloader-rule span { animation: page-loading-sweep 1.15s ease-in-out infinite alternate; }
+.page-preloader-caption { color: var(--muted); font-size: 12px; }
+@keyframes page-loading-sweep { from { transform: translateX(0); } to { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) {
-  .hero-preloader { transition: none; }
-  .hero-loading .hero-preloader-rule span { animation: none; width: 100%; }
+  .page-preloader { transition: none; }
+  .page-preloader.is-loading .page-preloader-rule span { animation: none; width: 100%; }
 }
-@media (scripting: none) { .hero-loading .hero-preloader { display: none; } }
+@media (scripting: none) {
+  .page-preloader.is-loading { display: none; }
+  html:has(.page-preloader.is-loading) { overflow: visible; }
+}
 /* English anime-title direction using locally hosted New Rocker, not an official logo font. */
 body { font-weight: 500; }
 h1,h2,h3,.wordmark,.footer-brand { font-weight: 900; text-transform: uppercase; }

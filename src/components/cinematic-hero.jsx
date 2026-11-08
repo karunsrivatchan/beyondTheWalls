@@ -5,13 +5,18 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { heroBeats, heroEndTitle, heroMedia } from "@/data/hero";
 gsap.registerPlugin(useGSAP, ScrollTrigger);
-export function CinematicHero() {
+export function CinematicHero({ onSettled }) {
     const root = useRef(null);
     const track = useRef(null);
     const video = useRef(null);
     const progress = useRef(null);
     const [status, setStatus] = useState("loading");
     const [source, setSource] = useState(null);
+    useEffect(() => {
+        if (status !== "loading")
+            onSettled(true);
+    }, [status, onSettled]);
+
     useEffect(() => {
         const controller = new AbortController();
         let active = true;
@@ -183,15 +188,6 @@ export function CinematicHero() {
     <section ref={root} className={`cinematic-hero hero-${status}`} aria-label="Attack on Titan cinematic introduction">
       <video ref={video} className="hero-video" src={source || undefined} muted playsInline preload="auto" disablePictureInPicture aria-hidden="true"/>
       <div className="hero-shade"/>
-      <div className="hero-preloader" aria-hidden="true">
-        <div className="hero-preloader-lockup">
-          <p className="hero-preloader-mark" lang="ja">進撃の巨人</p>
-          <p className="hero-preloader-title">Attack on Titan</p>
-          <p className="eyebrow">Beyond the Walls</p>
-          <div className="hero-preloader-rule"><span/></div>
-          <p className="hero-preloader-caption">Preparing the cinematic</p>
-        </div>
-      </div>
       <div className="hero-masthead"><span>進撃の巨人</span><span>ATTACK ON TITAN</span></div>
       <div className="hero-narratives">
         {heroBeats.map((beat, index) => (<div key={beat.eyebrow} className={`narrative-beat beat-${beat.align} ${index === 0 ? "beat-opening" : ""}`} aria-hidden={index !== 0}>
@@ -205,6 +201,6 @@ export function CinematicHero() {
       </div>
       <div className="hero-progress" aria-hidden="true"><div ref={progress}/></div>
       <p className="sr-only">Scroll down to advance through the muted film; scroll up to reverse. The film shows a walled world, its inhabitants, and the arrival of a towering threat.</p>
-      <p className={status === "error" ? "hero-status" : "sr-only"} role="status">{status === "error" ? "The film couldn’t load. You can still explore the archive below." : status === "loading" ? "Preparing the cinematic…" : ""}</p>
+      {status === "error" && <p className="hero-status" role="status">The film couldn’t load. You can still explore the archive below.</p>}
     </section></div>);
 }

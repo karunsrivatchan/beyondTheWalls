@@ -57,8 +57,8 @@ export function CharacterGallery() {
       <label className="titan-search"><span className="sr-only">Find a character</span><input type="search" placeholder="Find a character…" value={query} onChange={event => setQuery(event.target.value)}/></label>
     </div>
     <p className="titan-atlas-count" role="status">{matches.length} of {characterCatalogue.length} characters</p>
-    <div className="titan-atlas-field character-sticker-field">{matches.map((item, index) => <button key={item.id} className="titan-figure character-figure" style={{ "--figure-height": "340px" }} onClick={() => setSelected(item)} aria-label={`Explore ${characterDisplayName(item)}`} aria-haspopup="dialog">
-      <span className="titan-figure-art"><Image src={item.image} alt={characterDisplayName(item)} width={item.art.width} height={item.art.height} sizes="(max-width:600px) 46vw, (max-width:1000px) 30vw, 20vw" priority={index < 5}/></span>
+    <div className="titan-atlas-field character-sticker-field">{matches.map(item => <button key={item.id} className="titan-figure character-figure" style={{ "--figure-height": "340px" }} onClick={() => setSelected(item)} aria-label={`Explore ${characterDisplayName(item)}`} aria-haspopup="dialog">
+      <span className="titan-figure-art"><Image src={item.image} alt={characterDisplayName(item)} width={item.art.width} height={item.art.height} sizes="(max-width:600px) 46vw, (max-width:1000px) 30vw, 20vw" loading="eager"/></span>
       <span className="titan-figure-caption"><strong>{characterDisplayName(item)}</strong><span>{publicRoles[item.id] ?? item.role}</span></span>
     </button>)}</div>
     {!matches.length && <p className="titan-no-results">No characters match this search. Try another name.</p>}
