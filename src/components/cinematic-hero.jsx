@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -7,10 +7,48 @@ import { heroBeats, heroEndTitle, heroMedia } from "@/data/hero";
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 export function CinematicHero() {
     const root = useRef(null);
+    const track = useRef(null);
     const video = useRef(null);
     const progress = useRef(null);
     const [status, setStatus] = useState("loading");
+    const [source, setSource] = useState(null);
+    useEffect(() => {
+        const controller = new AbortController();
+        let active = true;
+        let objectUrl;
+        const timeout = setTimeout(() => controller.abort(), 25000);
+
+        async function bufferFilm() {
+            try {
+                const response = await fetch(heroMedia.src, { signal: controller.signal });
+                if (!response.ok)
+                    throw new Error("Could not download the hero film");
+                const film = await response.blob();
+                if (active) {
+                    objectUrl = URL.createObjectURL(film);
+                    setSource(objectUrl);
+                }
+            } catch {
+                if (active)
+                    setStatus("error");
+            } finally {
+                clearTimeout(timeout);
+            }
+        }
+
+        bufferFilm();
+        return () => {
+            active = false;
+            clearTimeout(timeout);
+            controller.abort();
+            if (objectUrl)
+                URL.revokeObjectURL(objectUrl);
+        };
+    }, []);
+
     useGSAP(() => {
+        if (!source)
+            return;
         const el = video.current;
         const container = root.current;
         const media = gsap.matchMedia();
@@ -19,66 +57,74 @@ export function CinematicHero() {
             // Keep reduced-motion copy stationary, without disabling the film's scrubbing.
             const reducedMotion = Boolean(ctx.conditions?.reduce);
             setStatus("loading");
-            let target = 0;
+            let requestedProgress = 0;
+            let seekingProgress = 0;
+            let renderedProgress = -1;
             let disposed = false;
             let trigger;
+            let scrubTimeline;
             let timeline;
             let ready = false;
             let lastSeekAt = 0;
-            let priming = false;
-            let primed = false;
-            let primeTimeout;
+            let lastFrame = 0;
+            let decodeTimeout;
             const beats = gsap.utils.toArray(".narrative-beat", container);
             const endTitle = container.querySelector(".hero-end-title");
             const masthead = container.querySelector(".hero-masthead");
-            // Pump the latest GSAP target independently of media events. One seek is
-            // normally in flight; a lost seeked event cannot permanently stop the film.
+            const renderProgress = (p) => {
+                if (p === renderedProgress)
+                    return;
+                renderedProgress = p;
+                timeline.time(p);
+                progress.current.style.transform = `scaleX(${Math.min(1, p)})`;
+            };
+            // Coalesce scroll updates into one seek per source frame and keep the
+            // captions with the frame that has finished seeking.
             const seek = () => {
-                if (disposed || priming || !ready || el.readyState < 1)
+                if (disposed || !ready || el.readyState < 1)
                     return;
                 const now = performance.now();
-                if (el.seeking) {
-                    if (now - lastSeekAt < 1000)
-                        return;
-                }
-                else if (Math.abs(el.currentTime - target) < 1 / (heroMedia.fps * 2))
+                if (el.seeking && now - lastSeekAt < 500)
                     return;
+                const frame = Math.round(Math.min(1, requestedProgress) * lastFrame);
+                const target = frame === 0 ? 0 : (frame + 0.25) / heroMedia.fps;
+                if (!el.seeking && Math.abs(el.currentTime - target) < 0.001) {
+                    renderProgress(requestedProgress);
+                    return;
+                }
                 lastSeekAt = now;
+                seekingProgress = requestedProgress;
                 el.currentTime = target;
             };
-            const scheduleSeek = () => seek();
-            const update = (p) => {
-                target = p * Math.max(0, el.duration - 1 / heroMedia.fps);
-                if (progress.current)
-                    progress.current.style.transform = `scaleX(${p})`;
-                scheduleSeek();
+            const finishSeek = () => {
+                if (ready && !disposed)
+                    renderProgress(seekingProgress);
             };
             const fail = () => {
                 if (disposed)
                     return;
                 disposed = true;
-                clearTimeout(primeTimeout);
+                clearTimeout(decodeTimeout);
                 gsap.ticker.remove(seek);
                 el.pause();
-                trigger?.kill(true);
+                trigger?.kill();
+                scrubTimeline?.kill();
                 timeline?.kill();
                 gsap.set(beats, { clearProps: "all" });
                 gsap.set([endTitle, masthead], { clearProps: "all" });
                 setStatus("error");
-                ScrollTrigger.refresh();
             };
             const initialize = () => {
-                if (ready || disposed || !Number.isFinite(el.duration) || el.duration <= 0 || el.readyState < 1)
+                if (ready || disposed || !Number.isFinite(el.duration) || el.duration <= 0 || el.readyState < 2)
                     return;
                 ready = true;
-                if (el.readyState >= 2)
-                    setStatus("ready");
+                lastFrame = Math.max(0, Math.round(el.duration * heroMedia.fps) - 1);
+                clearTimeout(decodeTimeout);
                 const playhead = { value: 0 };
                 gsap.set(beats, { autoAlpha: 0, y: reducedMotion ? 0 : 25 });
                 gsap.set(beats[0], { autoAlpha: 1, y: 0 });
                 gsap.set(endTitle, { autoAlpha: 0, y: reducedMotion ? 0 : 16 });
                 timeline = gsap.timeline({ paused: true });
-                timeline.to(playhead, { value: 1, duration: 1, ease: "none", onUpdate: () => update(playhead.value) }, 0);
                 heroBeats.forEach((beat, index) => {
                     if (index !== 0)
                         timeline.to(beats[index], { autoAlpha: 1, y: 0, duration: 0.035, ease: "none" }, beat.start);
@@ -88,83 +134,64 @@ export function CinematicHero() {
                 timeline.to(masthead, { autoAlpha: 0, duration: 0.02 }, 0.98);
                 timeline.to(endTitle, { autoAlpha: 1, y: 0, duration: 0.025, ease: "none" }, 1);
                 timeline.to({}, { duration: heroMedia.endHold }, 1);
+                scrubTimeline = gsap.to(playhead, {
+                    paused: true,
+                    value: timeline.duration(),
+                    ease: "none",
+                    onUpdate: () => { requestedProgress = playhead.value; },
+                });
                 trigger = ScrollTrigger.create({
-                    id: "cinematic-hero", trigger: container, start: "top top",
-                    end: () => `+=${gsap.utils.clamp(heroMedia.minScroll, heroMedia.maxScroll, el.duration * heroMedia.pixelsPerSecond)}`,
-                    pin: true, animation: timeline, scrub: heroMedia.scrub, anticipatePin: 1, invalidateOnRefresh: true,
-                    onRefresh: (self) => update(Math.min(1, self.progress * (1 + heroMedia.endHold))),
+                    id: "cinematic-hero", trigger: track.current, start: "top top",
+                    end: `+=${heroMedia.scrollDistance}`,
+                    animation: scrubTimeline, scrub: reducedMotion ? true : heroMedia.scrub,
                 });
                 ScrollTrigger.refresh();
+                setStatus("ready");
             };
-            const resume = () => {
-                initialize();
-                if (ready && !disposed && el.readyState >= 2)
-                    setStatus("ready");
-                if (ready && !disposed)
-                    scheduleSeek();
-            };
-            el.addEventListener("loadedmetadata", resume);
-            el.addEventListener("loadeddata", resume);
-            el.addEventListener("canplay", resume);
-            el.addEventListener("seeked", scheduleSeek);
+            el.addEventListener("loadeddata", initialize);
+            el.addEventListener("canplay", initialize);
+            el.addEventListener("seeked", finishSeek);
             el.addEventListener("error", fail);
             gsap.ticker.add(seek);
             el.muted = true;
             el.defaultMuted = true;
             el.pause();
-            // The declarative src lets the browser preload before React initializes;
-            // do not reset the decoder on mount or a motion-preference change.
-            initialize();
-            // Some mobile browsers require play() inside a gesture to unlock decoding.
-            // Pause immediately after it succeeds, then restore the scroll target.
-            const prime = () => {
-                if (disposed || priming || primed)
-                    return;
-                priming = true;
-                primeTimeout = setTimeout(() => {
-                    el.pause();
-                    priming = false;
-                    scheduleSeek();
-                }, 1200);
-                el.play().then(() => {
-                    el.pause();
-                    primed = true;
-                    resume();
-                }).catch(() => { }).finally(() => {
-                    clearTimeout(primeTimeout);
-                    priming = false;
-                    scheduleSeek();
-                });
-            };
-            window.addEventListener("pointerdown", prime);
-            window.addEventListener("keydown", prime);
-            window.addEventListener("touchstart", prime, { passive: true });
-            window.addEventListener("wheel", prime, { passive: true });
+            decodeTimeout = setTimeout(fail, 2500);
+            if (el.error)
+                fail();
+            else
+                initialize();
             return () => {
                 disposed = true;
-                clearTimeout(primeTimeout);
+                clearTimeout(decodeTimeout);
                 gsap.ticker.remove(seek);
-                window.removeEventListener("pointerdown", prime);
-                window.removeEventListener("keydown", prime);
-                window.removeEventListener("touchstart", prime);
-                window.removeEventListener("wheel", prime);
                 el.pause();
-                el.removeEventListener("loadedmetadata", resume);
-                el.removeEventListener("loadeddata", resume);
-                el.removeEventListener("canplay", resume);
-                el.removeEventListener("seeked", scheduleSeek);
+                el.removeEventListener("loadeddata", initialize);
+                el.removeEventListener("canplay", initialize);
+                el.removeEventListener("seeked", finishSeek);
                 el.removeEventListener("error", fail);
-                trigger?.kill(true);
+                trigger?.kill();
+                scrubTimeline?.kill();
                 timeline?.kill();
                 gsap.set(beats, { clearProps: "all" });
                 gsap.set([endTitle, masthead], { clearProps: "all" });
             };
         });
         return () => media.revert();
-    }, { scope: root });
-    return (<section ref={root} className={`cinematic-hero hero-${status}`} aria-label="Attack on Titan cinematic introduction">
-      <video ref={video} className="hero-video" src={heroMedia.src} poster={heroMedia.poster} muted playsInline preload="auto" disablePictureInPicture aria-hidden="true"/>
+    }, { scope: root, dependencies: [source], revertOnUpdate: true });
+    return (<div ref={track} className={`hero-track hero-track-${status}`} style={{ "--hero-scroll-distance": `${heroMedia.scrollDistance}px` }}>
+    <section ref={root} className={`cinematic-hero hero-${status}`} aria-label="Attack on Titan cinematic introduction">
+      <video ref={video} className="hero-video" src={source || undefined} muted playsInline preload="auto" disablePictureInPicture aria-hidden="true"/>
       <div className="hero-shade"/>
+      <div className="hero-preloader" aria-hidden="true">
+        <div className="hero-preloader-lockup">
+          <p className="hero-preloader-mark" lang="ja">進撃の巨人</p>
+          <p className="hero-preloader-title">Attack on Titan</p>
+          <p className="eyebrow">Beyond the Walls</p>
+          <div className="hero-preloader-rule"><span/></div>
+          <p className="hero-preloader-caption">Preparing the cinematic</p>
+        </div>
+      </div>
       <div className="hero-masthead"><span>進撃の巨人</span><span>ATTACK ON TITAN</span></div>
       <div className="hero-narratives">
         {heroBeats.map((beat, index) => (<div key={beat.eyebrow} className={`narrative-beat beat-${beat.align} ${index === 0 ? "beat-opening" : ""}`} aria-hidden={index !== 0}>
@@ -178,6 +205,6 @@ export function CinematicHero() {
       </div>
       <div className="hero-progress" aria-hidden="true"><div ref={progress}/></div>
       <p className="sr-only">Scroll down to advance through the muted film; scroll up to reverse. The film shows a walled world, its inhabitants, and the arrival of a towering threat.</p>
-      <p className="hero-status" role="status">{status === "error" ? "The film couldn’t load. You can still explore the archive below." : status === "loading" ? "Preparing the cinematic…" : ""}</p>
-    </section>);
+      <p className={status === "error" ? "hero-status" : "sr-only"} role="status">{status === "error" ? "The film couldn’t load. You can still explore the archive below." : status === "loading" ? "Preparing the cinematic…" : ""}</p>
+    </section></div>);
 }

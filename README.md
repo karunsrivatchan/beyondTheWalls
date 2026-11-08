@@ -20,7 +20,7 @@ Development and builds use Next.js's supported Webpack mode because Turbopack's 
 - The film responds to scrolling immediately, without an enable button, time display, or skip link. Reduced-motion preferences remove text travel; the explicitly requested video scrub smoothing remains active.
 - The last frame is held at the end of the pinned sequence and remains visible as the hero scrolls away. There is no exit fade to black.
 - Loading failure or a 25-second loading timeout leaves a static image with access to the rest of the page.
-- The source film is approximately 35.32 seconds, 1920 × 1080. `public/media/hero-scrub-intra.mp4` is a 720p H.264 Constrained Baseline derivative with every frame independently decodable, no B-frames, no audio, and fast-start metadata. This keeps the cost of backward decoding low without shipping an image sequence.
+- The source film is approximately 35.32 seconds, 1920 × 1080. `public/media/hero-scrub-hd.mp4` keeps that resolution with H.264 keyframes at most five frames apart. The opening screen waits for the complete download and the first decoded frame. The sticky hero reserves its scroll distance during loading, and the captions advance with completed video seeks. A download or decode timeout reveals the poster and leaves the archive accessible.
 
 After replacing the source clip, regenerate the web video and first-frame poster:
 

@@ -25,6 +25,12 @@ em { font-weight: inherit; color: #c8bdab; }
 .site-header nav a[aria-current]::after { content: ''; position: absolute; bottom: 0; left: 0; height: 2px; width: 100%; background: var(--red); }
 select option { background: #191b16; color: var(--bone); }
 .cinematic-hero { height: 100svh; min-height: 650px; position: relative; isolation: isolate; background: #151c13 url('/media/hero-poster.jpg') center/cover no-repeat; overflow: hidden; }
+.hero-track:not(.hero-track-error)::after { content: ""; display: block; height: var(--hero-scroll-distance); }
+.hero-track:not(.hero-track-error) > .cinematic-hero { position: sticky; top: 0; }
+@media (scripting: none) {
+  .hero-track:not(.hero-track-error)::after { display: none; }
+  .hero-track:not(.hero-track-error) > .cinematic-hero { position: relative; }
+}
 .hero-video { position: absolute; width: 100%; height: 100%; object-fit: cover; inset: 0; z-index: 0; }
 .hero-shade { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg,#0b100d55,transparent 80%),linear-gradient(0deg,#0b100fe8 0%,#0b100f50 30%,transparent 70%,#0b100f66); }
 .hero-masthead,.hero-narratives,.hero-end-title,.hero-progress,.hero-status { z-index: 2; }
@@ -47,6 +53,34 @@ select option { background: #191b16; color: var(--bone); }
 .hero-status { position: absolute; bottom: 98px; left: clamp(24px, 4vw, 72px); font-size: 11px; color: #e7ceae; max-width: 85%; }
 .hero-loading .hero-video { opacity: .7; }
 .hero-error .hero-video { visibility: hidden; }
+.hero-preloader {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 100px 24px 48px;
+  background: radial-gradient(ellipse at center, #25201a, #10110f 68%);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .4s ease, visibility .4s;
+}
+.hero-loading .hero-preloader { opacity: 1; visibility: visible; }
+.hero-preloader-mark { color: #d97666; font-family: Georgia, serif; font-size: 15px; letter-spacing: .35em; }
+.hero-preloader-title { margin-block: 12px; font-size: clamp(38px, 8vw, 108px); line-height: .95; }
+.hero-preloader .eyebrow { color: #c8bdab; }
+.hero-preloader-rule { width: 112px; height: 2px; margin: 32px auto 12px; background: #ffffff26; overflow: hidden; }
+.hero-preloader-rule span { display: block; width: 50%; height: 100%; background: var(--red); }
+.hero-loading .hero-preloader-rule span { animation: hero-loading-sweep 1.15s ease-in-out infinite alternate; }
+.hero-preloader-caption { color: var(--muted); font-size: 12px; }
+@keyframes hero-loading-sweep { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-preloader { transition: none; }
+  .hero-loading .hero-preloader-rule span { animation: none; width: 100%; }
+}
+@media (scripting: none) { .hero-loading .hero-preloader { display: none; } }
 /* English anime-title direction using locally hosted New Rocker, not an official logo font. */
 body { font-weight: 500; }
 h1,h2,h3,.wordmark,.footer-brand { font-weight: 900; text-transform: uppercase; }

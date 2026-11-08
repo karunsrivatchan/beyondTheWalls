@@ -11,9 +11,8 @@ function run(args) {
   if (result.error) console.error(result.error.message);
   if (result.status !== 0) process.exit(result.status || 1);
 }
-// Every frame is independently decodable, so reverse scrubbing does not have
-// to repeatedly decode a group of dependent frames. Baseline improves compatibility.
-run(['-i', input, '-an', '-vf', 'scale=1280:-2,fps=24', '-c:v', 'libx264', '-profile:v', 'baseline', '-preset', 'medium', '-crf', '22', '-pix_fmt', 'yuv420p', '-g', '1', '-keyint_min', '1', '-sc_threshold', '0', '-bf', '0', '-movflags', '+faststart', 'public/media/hero-scrub-intra.next.mp4']);
-renameSync('public/media/hero-scrub-intra.next.mp4', 'public/media/hero-scrub-intra.mp4');
+// Frequent keyframes keep seeks cheap while retaining 1080p detail.
+run(['-i', input, '-an', '-vf', 'scale=1920:-2,fps=24', '-c:v', 'libx264', '-profile:v', 'high', '-preset', 'medium', '-crf', '22', '-pix_fmt', 'yuv420p', '-g', '5', '-bf', '0', '-movflags', '+faststart', 'public/media/hero-scrub-hd.next.mp4']);
+renameSync('public/media/hero-scrub-hd.next.mp4', 'public/media/hero-scrub-hd.mp4');
 run(['-ss', '0', '-i', input, '-frames:v', '1', '-vf', 'scale=1920:-2', '-q:v', '3', '-update', '1', 'public/media/hero-poster.next.jpg']);
 renameSync('public/media/hero-poster.next.jpg', 'public/media/hero-poster.jpg');

@@ -6,4 +6,4 @@ export const heroBeats = [
     { start: 0.83, end: 1, eyebrow: "THE WILL TO GO ON", title: ["What would you risk", "to be free?"], description: "Step into the world of Attack on Titan.", align: "left" },
 ];
 export const heroEndTitle = { title: "Attack on Titan", subtitle: "Beyond the Walls" };
-export const heroMedia = { src: "/media/hero-scrub-intra.mp4", poster: "/media/hero-poster.jpg", pixelsPerSecond: 180, minScroll: 5500, maxScroll: 10500, scrub: 1.1, fps: 24, endHold: 0.16 };
+export const heroMedia = { src: "/media/hero-scrub-hd.mp4", scrollDistance: 6350, scrub: 0.25, fps: 24, endHold: 0.16 };
